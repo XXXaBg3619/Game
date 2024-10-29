@@ -1,78 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Search Engine</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
-        }
-        #searchContainer {
-            text-align: center;
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        input[type="text"] {
-            width: 80%;
-            padding: 10px;
-            font-size: 1.2em;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1.2em;
-            margin-top: 20px;
-            background-color: #4285f4;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #357ae8;
-        }
-        #results {
-            margin-top: 30px;
-            text-align: left;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>簡易線上投票系統</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .container { max-width: 400px; margin: auto; padding: 20px; }
+    button { padding: 10px 20px; }
+  </style>
 </head>
 <body>
-    <div id="searchContainer">
-        <h1>Simple Web Search</h1>
-        <input type="text" id="searchInput" placeholder="Enter your search query here...">
-        <br>
-        <button onclick="performSearch()">Search</button>
-        <div id="results"></div>
+  <div class="container">
+    <h1>線上投票</h1>
+    <form id="voteForm">
+      <p>您最喜歡的飲料是什麼？</p>
+      <input type="radio" id="coffee" name="vote" value="coffee">
+      <label for="coffee">咖啡</label><br>
+      <input type="radio" id="tea" name="vote" value="tea">
+      <label for="tea">茶</label><br>
+      <input type="radio" id="juice" name="vote" value="juice">
+      <label for="juice">果汁</label><br>
+      <br>
+      <button type="button" onclick="submitVote()">提交投票</button>
+    </form>
+    <div id="results">
+      <h2>投票結果</h2>
+      <p>咖啡: <span id="coffeeCount">0</span></p>
+      <p>茶: <span id="teaCount">0</span></p>
+      <p>果汁: <span id="juiceCount">0</span></p>
     </div>
-    <script>
-        function performSearch() {
-            const query = document.getElementById('searchInput').value;
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = "<p>Searching for: <strong>" + query + "</strong></p>";
-            // Dummy search results for demonstration purposes
-            const dummyResults = [
-                "Result 1: This is a search result for " + query,
-                "Result 2: Another result for " + query,
-                "Result 3: More information on " + query,
-                "Result 4: Relevant link for " + query
-            ];
-            dummyResults.forEach(result => {
-                const p = document.createElement('p');
-                p.textContent = result;
-                resultsDiv.appendChild(p);
-            });
-        }
-    </script>
+  </div>
+
+  <script>
+    // 初始化投票數據
+    const initVotes = () => {
+      const votes = JSON.parse(localStorage.getItem("votes")) || { coffee: 0, tea: 0, juice: 0 };
+      localStorage.setItem("votes", JSON.stringify(votes));
+      updateResults(votes);
+    };
+
+    // 更新投票結果顯示
+    const updateResults = (votes) => {
+      document.getElementById("coffeeCount").textContent = votes.coffee;
+      document.getElementById("teaCount").textContent = votes.tea;
+      document.getElementById("juiceCount").textContent = votes.juice;
+    };
+
+    // 提交投票
+    const submitVote = () => {
+      const selectedVote = document.querySelector('input[name="vote"]:checked');
+      if (!selectedVote) {
+        alert("請選擇一個選項！");
+        return;
+      }
+
+      const voteOption = selectedVote.value;
+      const votes = JSON.parse(localStorage.getItem("votes")) || { coffee: 0, tea: 0, juice: 0 };
+      votes[voteOption] += 1;
+      localStorage.setItem("votes", JSON.stringify(votes));
+      updateResults(votes);
+      alert("感謝您的投票！");
+    };
+
+    // 加載頁面時初始化
+    window.onload = initVotes;
+  </script>
 </body>
 </html>
