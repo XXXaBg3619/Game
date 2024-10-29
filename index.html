@@ -3,108 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fruit Catcher Game</title>
+    <title>Tetris Game</title>
     <style>
         body {
-            background-color: #87CEEB;
+            background-color: #000;
             overflow: hidden;
             text-align: center;
+            color: #fff;
         }
         canvas {
-            border: 2px solid #000;
-            background: #e0f7fa;
+            border: 2px solid #fff;
+            background: #111;
         }
     </style>
 </head>
 <body>
-    <h1>Fruit Catcher Game</h1>
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <h1>Tetris Game</h1>
+    <canvas id="gameCanvas" width="300" height="600"></canvas>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const ROWS = 20;
+        const COLS = 10;
+        const BLOCK_SIZE = 30;
 
-        const basket = {
-            width: 80,
-            height: 20,
-            x: canvas.width / 2 - 40,
-            y: canvas.height - 30,
-            speed: 10
-        };
+        const COLORS = [
+            null,
+            'cyan',
+            'blue',
+            'orange',
+            'yellow',
+            'green',
+            'purple',
+            'red'
+        ];
 
-        const fruits = [];
-        const fruitColors = ['red', 'orange', 'yellow', 'green', 'purple'];
-        let score = 0;
+        const SHAPES = [
+            [],
+            [[1, 1, 1, 1]], // I
+            [[2, 0, 0], [2, 2, 2]], // J
+            [[0, 0, 3], [3, 3, 3]], // L
+            [[4, 4], [4, 4]], // O
+            [[0, 5, 5], [5, 5, 0]], // S
+            [[0, 6, 0], [6, 6, 6]], // T
+            [[7, 7, 0], [0, 7, 7]] // Z
+        ];
 
-        function drawBasket() {
-            ctx.fillStyle = 'brown';
-            ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+        let board = createBoard(ROWS, COLS);
+        let piece = createPiece();
+        let dropCounter = 0;
+        let dropInterval = 1000;
+        let lastTime = 0;
+
+        function createBoard(rows, cols) {
+            const board = [];
+            while (rows--) {
+                board.push(new Array(cols).fill(0));
+            }
+            return board;
         }
 
-        function createFruit() {
-            const x = Math.random() * (canvas.width - 20);
-            const color = fruitColors[Math.floor(Math.random() * fruitColors.length)];
-            fruits.push({ x: x, y: 0, size: 20, color: color });
-        }
-
-        function drawFruits() {
-            fruits.forEach((fruit) => {
-                ctx.fillStyle = fruit.color;
-                ctx.beginPath();
-                ctx.arc(fruit.x, fruit.y, fruit.size / 2, 0, Math.PI * 2);
-                ctx.fill();
+        function drawBoard() {
+            board.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        ctx.fillStyle = COLORS[value];
+                        ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                        ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                    }
+                });
             });
         }
 
-        function updateFruits() {
-            fruits.forEach((fruit, index) => {
-                fruit.y += 5;
-                if (fruit.y > canvas.height) {
-                    fruits.splice(index, 1);
-                } else if (
-                    fruit.x > basket.x &&
-                    fruit.x < basket.x + basket.width &&
-                    fruit.y + fruit.size / 2 >= basket.y &&
-                    fruit.y < basket.y + basket.height
-                ) {
-                    fruits.splice(index, 1);
-                    score++;
+        function createPiece() {
+            const typeId = Math.floor(Math.random() * (SHAPES.length - 1)) + 1;
+            const shape = SHAPES[typeId];
+            return {
+                shape: shape,
+                color: COLORS[typeId],
+                x: Math.floor((COLS - shape[0].length) / 2),
+                y: 0
+            };
+        }
+
+        function drawPiece() {
+            piece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        ctx.fillStyle = piece.color;
+                        ctx.fillRect((piece.x + x) * BLOCK_SIZE, (piece.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                        ctx.strokeRect((piece.x + x) * BLOCK_SIZE, (piece.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                    }
+                });
+            });
+        }
+
+        function dropPiece() {
+            piece.y++;
+            if (collide(board, piece)) {
+                piece.y--;
+                merge(board, piece);
+                piece = createPiece();
+                if (collide(board, piece)) {
+                    board = createBoard(ROWS, COLS);
                 }
+            }
+            dropCounter = 0;
+        }
+
+        function merge(board, piece) {
+            piece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        board[y + piece.y][x + piece.x] = value;
+                    }
+                });
             });
         }
 
-        function drawScore() {
-            ctx.fillStyle = '#000';
-            ctx.font = '20px Arial';
-            ctx.fillText('Score: ' + score, 10, 30);
+        function collide(board, piece) {
+            for (let y = 0; y < piece.shape.length; ++y) {
+                for (let x = 0; x < piece.shape[y].length; ++x) {
+                    if (
+                        piece.shape[y][x] !== 0 &&
+                        (board[y + piece.y] &&
+                            board[y + piece.y][x + piece.x]) !== 0
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
-        function moveBasket(direction) {
-            if (direction === 'left' && basket.x > 0) {
-                basket.x -= basket.speed;
-            } else if (direction === 'right' && basket.x + basket.width < canvas.width) {
-                basket.x += basket.speed;
+        function movePiece(dir) {
+            piece.x += dir;
+            if (collide(board, piece)) {
+                piece.x -= dir;
+            }
+        }
+
+        function rotatePiece() {
+            const shape = piece.shape;
+            const newShape = shape[0].map((_, index) => shape.map(row => row[index]).reverse());
+            const oldX = piece.x;
+            piece.shape = newShape;
+            if (collide(board, piece)) {
+                piece.x = oldX;
+                piece.shape = shape;
             }
         }
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') {
-                moveBasket('left');
+                movePiece(-1);
             } else if (e.key === 'ArrowRight') {
-                moveBasket('right');
+                movePiece(1);
+            } else if (e.key === 'ArrowDown') {
+                dropPiece();
+            } else if (e.key === 'ArrowUp') {
+                rotatePiece();
             }
         });
 
-        function gameLoop() {
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                dropPiece();
+            }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBasket();
-            drawFruits();
-            drawScore();
-            updateFruits();
-            requestAnimationFrame(gameLoop);
+            drawBoard();
+            drawPiece();
+            requestAnimationFrame(update);
         }
 
-        setInterval(createFruit, 1000);
-        gameLoop();
+        update();
     </script>
 </body>
 </html>
