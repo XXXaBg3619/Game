@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>簡易線上投票系統</title>
+  <title>區塊鏈模擬的投票系統</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; }
     .container { max-width: 400px; margin: auto; padding: 20px; }
@@ -11,7 +11,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>線上投票</h1>
+    <h1>線上投票 (模擬區塊鏈和 ZKP)</h1>
     <form id="voteForm">
       <p>您最喜歡的飲料是什麼？</p>
       <input type="radio" id="coffee" name="vote" value="coffee">
@@ -24,7 +24,7 @@
       <button type="button" onclick="submitVote()">提交投票</button>
     </form>
     <div id="results">
-      <h2>投票結果</h2>
+      <h2>投票結果 (模擬)</h2>
       <p>咖啡: <span id="coffeeCount">0</span></p>
       <p>茶: <span id="teaCount">0</span></p>
       <p>果汁: <span id="juiceCount">0</span></p>
@@ -32,38 +32,55 @@
   </div>
 
   <script>
-    // 初始化投票數據
-    const initVotes = () => {
-      const votes = JSON.parse(localStorage.getItem("votes")) || { coffee: 0, tea: 0, juice: 0 };
-      localStorage.setItem("votes", JSON.stringify(votes));
-      updateResults(votes);
-    };
+    // 初始化模擬區塊鏈
+    let blockchain = [];
+    let voteCounts = { coffee: 0, tea: 0, juice: 0 };
+
+    // 零知識證明的模擬驗證（在這裡簡化為隨機數校驗）
+    function zeroKnowledgeProof() {
+      return Math.random() > 0.5;  // 模擬 50% 的驗證成功率
+    }
 
     // 更新投票結果顯示
-    const updateResults = (votes) => {
-      document.getElementById("coffeeCount").textContent = votes.coffee;
-      document.getElementById("teaCount").textContent = votes.tea;
-      document.getElementById("juiceCount").textContent = votes.juice;
-    };
+    function updateResults() {
+      document.getElementById("coffeeCount").textContent = voteCounts.coffee;
+      document.getElementById("teaCount").textContent = voteCounts.tea;
+      document.getElementById("juiceCount").textContent = voteCounts.juice;
+    }
 
     // 提交投票
-    const submitVote = () => {
+    function submitVote() {
       const selectedVote = document.querySelector('input[name="vote"]:checked');
       if (!selectedVote) {
         alert("請選擇一個選項！");
         return;
       }
 
-      const voteOption = selectedVote.value;
-      const votes = JSON.parse(localStorage.getItem("votes")) || { coffee: 0, tea: 0, juice: 0 };
-      votes[voteOption] += 1;
-      localStorage.setItem("votes", JSON.stringify(votes));
-      updateResults(votes);
-      alert("感謝您的投票！");
-    };
+      // 模擬 ZKP 驗證
+      const isVerified = zeroKnowledgeProof();
+      if (!isVerified) {
+        alert("投票驗證失敗，請重試！");
+        return;
+      }
 
-    // 加載頁面時初始化
-    window.onload = initVotes;
+      const voteOption = selectedVote.value;
+      voteCounts[voteOption] += 1;
+
+      // 模擬將投票紀錄加入區塊鏈
+      const block = {
+        id: blockchain.length + 1,
+        vote: voteOption,
+        timestamp: new Date().toISOString()
+      };
+      blockchain.push(block);
+
+      updateResults();
+      alert("投票成功，已模擬記錄至區塊鏈！");
+      console.log("模擬區塊鏈紀錄：", blockchain);
+    }
+
+    // 初始化頁面時更新顯示
+    window.onload = updateResults;
   </script>
 </body>
 </html>
