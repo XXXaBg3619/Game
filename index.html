@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Search Engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        #searchContainer {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            margin-top: 20px;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        #results {
+            margin-top: 30px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="searchContainer">
+        <h1>Simple Web Search</h1>
+        <input type="text" id="searchInput" placeholder="Enter your search query here...">
+        <br>
+        <button onclick="performSearch()">Search</button>
+        <div id="results"></div>
+    </div>
+    <script>
+        function performSearch() {
+            const query = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = "<p>Searching for: <strong>" + query + "</strong></p>";
+            // Dummy search results for demonstration purposes
+            const dummyResults = [
+                "Result 1: This is a search result for " + query,
+                "Result 2: Another result for " + query,
+                "Result 3: More information on " + query,
+                "Result 4: Relevant link for " + query
+            ];
+            dummyResults.forEach(result => {
+                const p = document.createElement('p');
+                p.textContent = result;
+                resultsDiv.appendChild(p);
+            });
+        }
+    </script>
+</body>
+</html>
