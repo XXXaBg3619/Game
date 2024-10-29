@@ -10,19 +10,42 @@
             overflow: hidden;
             text-align: center;
             color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        #gameContainer {
+            display: flex;
         }
         canvas {
             border: 2px solid #fff;
             background: #111;
         }
+        #nextPieces {
+            margin-left: 20px;
+        }
+        #nextPieces canvas {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Tetris Game</h1>
-    <canvas id="gameCanvas" width="300" height="600"></canvas>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="300" height="600"></canvas>
+        <div id="nextPieces">
+            <canvas id="nextCanvas1" width="120" height="120"></canvas>
+            <canvas id="nextCanvas2" width="120" height="120"></canvas>
+            <canvas id="nextCanvas3" width="120" height="120"></canvas>
+        </div>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const nextCtx1 = document.getElementById('nextCanvas1').getContext('2d');
+        const nextCtx2 = document.getElementById('nextCanvas2').getContext('2d');
+        const nextCtx3 = document.getElementById('nextCanvas3').getContext('2d');
+
         const ROWS = 20;
         const COLS = 10;
         const BLOCK_SIZE = 30;
@@ -55,6 +78,7 @@
 
         let board = createBoard(ROWS, COLS);
         let piece = createPiece();
+        let nextPieces = [createPiece(), createPiece(), createPiece()];
         let dropCounter = 0;
         let dropInterval = 1000;
         let lastTime = 0;
@@ -90,7 +114,19 @@
             };
         }
 
-        function drawPiece() {
+        function drawPiece(ctx, piece, blockSize) {
+            piece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        ctx.fillStyle = piece.color;
+                        ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
+                        ctx.strokeRect(x * blockSize, y * blockSize, blockSize, blockSize);
+                    }
+                });
+            });
+        }
+
+        function drawMainPiece() {
             piece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
@@ -102,12 +138,21 @@
             });
         }
 
+        function drawNextPieces() {
+            const nextCtxs = [nextCtx1, nextCtx2, nextCtx3];
+            nextCtxs.forEach((nextCtx, index) => {
+                nextCtx.clearRect(0, 0, nextCtx.canvas.width, nextCtx.canvas.height);
+                drawPiece(nextCtx, nextPieces[index], 30);
+            });
+        }
+
         function dropPiece() {
             piece.y++;
             if (collide(board, piece)) {
                 piece.y--;
                 merge(board, piece);
-                piece = createPiece();
+                piece = nextPieces.shift();
+                nextPieces.push(createPiece());
                 if (collide(board, piece)) {
                     board = createBoard(ROWS, COLS);
                 }
@@ -158,6 +203,20 @@
             }
         }
 
+        function hardDrop() {
+            while (!collide(board, piece)) {
+                piece.y++;
+            }
+            piece.y--;
+            merge(board, piece);
+            piece = nextPieces.shift();
+            nextPieces.push(createPiece());
+            if (collide(board, piece)) {
+                board = createBoard(ROWS, COLS);
+            }
+            dropCounter = 0;
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') {
                 movePiece(-1);
@@ -167,6 +226,8 @@
                 dropPiece();
             } else if (e.key === 'ArrowUp') {
                 rotatePiece();
+            } else if (e.key === ' ') {
+                hardDrop();
             }
         });
 
@@ -179,7 +240,8 @@
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBoard();
-            drawPiece();
+            drawMainPiece();
+            drawNextPieces();
             requestAnimationFrame(update);
         }
 
